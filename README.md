@@ -69,8 +69,8 @@ and to install the package in your local area using the command pip:
 In which:
 
 - `ACTION`: is an verb-substantive. Example: "`file_consistency_checker`";
-- `hillslope_model_number`: receives 190 for Constant Runoff Model, 254 for Top Layer Model, etc.
-- `EXT`: usually `.py`  
+- `hillslope_model_number`: receives 190 for Constant Runoff Model, 254 for Top Layer Model, etc.;
+- `EXT`: usually `.py`.
 
 ### Available Scripts
 
