@@ -60,9 +60,9 @@ and to install the package in your local area using the command pip:
     $ pip install --user [MODULE_NAME]
 
 
-## Scripts
+## Script File Naming Convention
 
-### Naming Convention
+It is adapted the sollowing structure:
 
     ACTION_[hillslope_model_number].EXT
 
@@ -72,8 +72,24 @@ In which:
 - `hillslope_model_number`: receives 190 for Constant Runoff Model, 254 for Top Layer Model, etc.;
 - `EXT`: usually `.py`.
 
-### Available Scripts
+## Available Scripts
 
-- `file_consistency_checker_rvr.py`: verifies if a given *.rvr* file is topologically consistent; 
-- `file_converter_rec_to_h5.py` : converts snapshots from *.rec* into a *.h5* format;
-- `initialcondition_generator_254_idealized.py` : creates an *.rec* initial condition file by extrapolation. 
+The available scripts in the toolbox with a brief description are listed here in alphabetical order.
+
+### file_consistency_checker_rvr.py
+
+Verifies if a given *.rvr* file is topologically consistent, looking for loops and downstream bifurcations.
+
+### file\_converter\_hlmodels\_h5.py
+
+Converts snapshot files in *.h5* format from one Hillslope-Link model to another.
+
+*Example*: snapshot for model 254 (Top Layer, 7 states) to model 195 (Offline, 4 states).
+
+### file\_converter\_rec\_to\_h5.py
+
+Converts snapshots from *.rec* into a *.h5* snapshot format.
+
+### initialcondition\_generator\_254\_idealized.py
+
+Creates an *.rec* initial condition file by extrapolation of the outlet/drainage area relationship on a given link (usually the outlet link) for Top Layer (254) model. 
