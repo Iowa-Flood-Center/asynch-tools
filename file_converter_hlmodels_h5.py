@@ -245,31 +245,30 @@ class InitialConditionConverterSpecific:
             return False
 
         # create data type
-        the_dtype = InitialConditionConverter.create_datatype(8)
+        the_dtype = InitialConditionConverter.create_datatype(9)
 
         # compress data
         compress_data = []
         for cur_hdf_row in in_hdf_data:
-            cur_list = [cur_hdf_row[0],                                     # link id
-                        cur_hdf_row[1],                                     # discharge
-                        cur_hdf_row[2],                                     # ponded water
-                        cur_hdf_row[3],                                     # top layer
-                        cur_hdf_row[4],                                     # soil water
-                        cur_hdf_row[5],                                     # acc. prec.
-                        cur_hdf_row[6],                                     # acc. runoff
-                        0.0]                                                # acc. evap.
+            cur_tuple = (cur_hdf_row[0],                                     # link id
+                         cur_hdf_row[1],                                     # discharge
+                         cur_hdf_row[2],                                     # ponded water
+                         cur_hdf_row[3],                                     # top layer
+                         cur_hdf_row[4],                                     # soil water
+                         cur_hdf_row[5],                                     # baseflow
+                         cur_hdf_row[6],                                     # acc. prec.
+                         cur_hdf_row[7],                                     # acc. runoff
+                         0.0)                                                # acc. evap.
 
             try:
-                cur_list_np = np.array(tuple(cur_list), dtype=the_dtype)
+                cur_list_np = np.array(cur_tuple, dtype=the_dtype)
                 compress_data.append(cur_list_np)
             except ValueError:
-                print("Tuple has {0} elements. Data type has {1}.".format(len(tuple(cur_list)), len(the_dtype)))
+                print("Tuple has {0} elements. Data type has {1}.".format(len(cur_tuple), len(the_dtype)))
                 break
 
         # write output file
-        InitialConditionConverter.write_output_file(out_path, 195, unix_time, the_dtype, compress_data)
-
-        return True
+        return InitialConditionConverter.write_output_file(out_path, 256, unix_time, the_dtype, compress_data)
 
     def __init__(self):
         return
