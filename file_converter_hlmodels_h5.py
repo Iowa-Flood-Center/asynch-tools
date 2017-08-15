@@ -8,6 +8,9 @@ import os
 
 if '-h' in sys.argv:
     print("Converts a snapshot file (.h5) from an hl-model format to another (example: from 254 to 195).")
+    print("Available conversions:")
+    print("  254 -> 195")
+    print("  254 -> 256")
     print("Usage: python file_converter_hlmodels_h5.py -mode MODE -in_path INPUT_PATH -out_path OUTPUT_PATH -out_hl HL")
     print("  MODE        : Must be 'f' for 'single file' or 'd' for 'directory of files'.")
     print("  INPUT_PATH  : Path for a .h5 file (if MODE=f) or for a folder containing .h5 files (if MODE=d).")
@@ -99,10 +102,11 @@ class InitialConditionConverter:
 
         # route to proper converter
         if (input_hlmodel == 254) and (output_hlmodel_id == 195):
-            return InitialConditionConverter.convert_from_254_to_195(input_file_path, output_file_path)
+            return InitialConditionConverterSpecific.convert_from_254_to_195(input_file_path, output_file_path)
+        elif (input_hlmodel == 254) and (output_hlmodel_id == 256):
+            return InitialConditionConverterSpecific.convert_from_254_to_256(input_file_path, output_file_path)
         else:
             print("Conversion from {0} to {1} not available.".format(input_hlmodel, output_hlmodel_id))
-            print("  ({0}) and ({1})".format(type(input_hlmodel), type(output_hlmodel_id)))
             return False
 
     @staticmethod
@@ -118,56 +122,6 @@ class InitialConditionConverter:
                 return int(hdf_file.attrs['model'][0])
         except IndexError:
             return None
-
-    @staticmethod
-    def convert_from_254_to_195(in_path, out_path):
-        """
-
-        :param in_path:
-        :param out_path:
-        :return:
-        """
-
-        # read inp file
-        with h5py.File(in_path, 'r') as r_file:
-            unix_time = int(r_file.attrs['unix_time'][0])
-            in_hdf_data = np.array(r_file.get('snapshot'))
-
-        # basic check
-        if in_hdf_data.size == 1:
-            print("Unable to find 'snapshot' dataset in file: {0}.".format(in_path))
-            return False
-
-        # create data type
-        dtype_arg = list()
-        dtype_arg.append(("link_id", np.uint32))
-        for cur_idx in range(4):
-            dtype_arg.append(("state_{0}".format(cur_idx), np.float64))
-        the_dtype = np.dtype(dtype_arg)
-
-        # compress data
-        compress_data = []
-        for cur_hdf_row in in_hdf_data:
-            cur_list = []
-            cur_list.append(cur_hdf_row[0])                                 # link id
-            cur_list.append(cur_hdf_row[1])                                 # discharge
-            cur_list.append(cur_hdf_row[2])                                 # ponded water
-            cur_list.append(float(cur_hdf_row[3]) + float(cur_hdf_row[4]))  # soil water
-            cur_list.append(cur_hdf_row[5])                                 # acc. precip.
-
-            cur_list_np = np.array(tuple(cur_list), dtype=the_dtype)
-            compress_data.append(cur_list_np)
-
-        # write output file
-        with h5py.File(out_path, 'w') as w_file:
-            w_file.attrs.create('model', [195], dtype='uint16')
-            w_file.attrs.create('unix_time', [unix_time], dtype='uint32')
-            w_file.attrs.create('version', InitialConditionConverter._OUT_ASYNCH_VERSION, dtype='S6')
-            w_file.create_dataset('snapshot', dtype=the_dtype, data=compress_data, compression="gzip",
-                                  compression_opts=5)
-
-        print("Created file: {0}".format(out_path))
-        return True
 
     @staticmethod
     def try_to_guess_output_file_name(input_file_name, output_hlmodel_id):
@@ -186,13 +140,148 @@ class InitialConditionConverter:
         out_file_name = "state{0}_{1}".format(output_hlmodel_id, splitted_file_name[1])
         return out_file_name
 
+    @staticmethod
+    def read_input_file(file_path):
+        """
+
+        :param file_path:
+        :return: Two values-array of (timestamp, data matrix)
+        """
+
+        with h5py.File(file_path, 'r') as r_file:
+            unix_time = int(r_file.attrs['unix_time'][0])
+            in_hdf_data = np.array(r_file.get('snapshot'))
+
+        return unix_time, in_hdf_data
+
+    @staticmethod
+    def create_datatype(num_states):
+        """
+
+        :param num_states:
+        :return:
+        """
+
+        dtype_arg = list()
+        dtype_arg.append(("link_id", np.uint32))
+        for cur_idx in range(num_states - 1):
+            dtype_arg.append(("state_{0}".format(cur_idx), np.float64))
+
+        return np.dtype(dtype_arg)
+
+    @staticmethod
+    def write_output_file(file_path, out_model_id, unix_time, data_type, compress_data):
+        """
+
+        :param file_path:
+        :param out_model_id:
+        :param unix_time:
+        :param data_type:
+        :param compress_data:
+        :return:
+        """
+
+        with h5py.File(file_path, 'w') as w_file:
+            w_file.attrs.create('model', [out_model_id], dtype='uint16')
+            w_file.attrs.create('unix_time', [unix_time], dtype='uint32')
+            w_file.attrs.create('version', InitialConditionConverter._OUT_ASYNCH_VERSION, dtype='S6')
+            w_file.create_dataset('snapshot', dtype=data_type, data=compress_data, compression="gzip",
+                                  compression_opts=5)
+
+        return True
+
     def __init__(self):
         return
+
+
+class InitialConditionConverterSpecific:
+
+    @staticmethod
+    def convert_from_254_to_195(in_path, out_path):
+        """
+
+        :param in_path:
+        :param out_path:
+        :return:
+        """
+
+        # read inp file and basic check
+        unix_time, in_hdf_data = InitialConditionConverter.read_input_file(in_path)
+        if in_hdf_data.size == 1:
+            print("Unable to find 'snapshot' dataset in file: {0}.".format(in_path))
+            return False
+
+        # create data type
+        the_dtype = InitialConditionConverter.create_datatype(5)
+
+        # compress data
+        compress_data = []
+        for cur_hdf_row in in_hdf_data:
+            cur_tuple = (cur_hdf_row[0],                                     # link id
+                         cur_hdf_row[1],                                     # discharge
+                         cur_hdf_row[2],                                     # ponded water
+                         float(cur_hdf_row[3]) + float(cur_hdf_row[4]),      # soil water
+                         cur_hdf_row[5])                                     # acc. precip.
+
+            cur_list_np = np.array(cur_tuple, dtype=the_dtype)
+            compress_data.append(cur_list_np)
+
+        # write output file
+        return InitialConditionConverter.write_output_file(out_path, 195, unix_time, the_dtype, compress_data)
+
+    @staticmethod
+    def convert_from_254_to_256(in_path, out_path):
+        """
+
+        :param in_path:
+        :param out_path:
+        :return:
+        """
+
+        # read inp file
+        unix_time, in_hdf_data = InitialConditionConverter.read_input_file(in_path)
+        if in_hdf_data.size == 1:
+            print("Unable to find 'snapshot' dataset in file: {0}.".format(in_path))
+            return False
+
+        # create data type
+        the_dtype = InitialConditionConverter.create_datatype(8)
+
+        # compress data
+        compress_data = []
+        for cur_hdf_row in in_hdf_data:
+            cur_list = [cur_hdf_row[0],                                     # link id
+                        cur_hdf_row[1],                                     # discharge
+                        cur_hdf_row[2],                                     # ponded water
+                        cur_hdf_row[3],                                     # top layer
+                        cur_hdf_row[4],                                     # soil water
+                        cur_hdf_row[5],                                     # acc. prec.
+                        cur_hdf_row[6],                                     # acc. runoff
+                        0.0]                                                # acc. evap.
+
+            try:
+                cur_list_np = np.array(tuple(cur_list), dtype=the_dtype)
+                compress_data.append(cur_list_np)
+            except ValueError:
+                print("Tuple has {0} elements. Data type has {1}.".format(len(tuple(cur_list)), len(the_dtype)))
+                break
+
+        # write output file
+        InitialConditionConverter.write_output_file(out_path, 195, unix_time, the_dtype, compress_data)
+
+        return True
+
+    def __init__(self):
+        return
+
 
 # ###################################################### RUNS ######################################################## #
 
 if mode_arg == "f":
-    InitialConditionConverter.convert_file(inpp_arg, outp_arg, outhl_arg)
+    if InitialConditionConverter.convert_file(inpp_arg, outp_arg, outhl_arg):
+        print("Created file: {0}".format(outp_arg))
+    else:
+        print("Unable to create file: {0}".format(outp_arg))
 elif mode_arg == "d":
     InitialConditionConverter.convert_directory(inpp_arg, outp_arg, outhl_arg)
 else:
