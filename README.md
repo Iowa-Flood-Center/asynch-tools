@@ -77,7 +77,7 @@ In which:
 
 The available scripts in the toolbox with a brief description are listed here in alphabetical order.
 
-### file_consistency_checker_rvr.py
+### file\_consistency\_checker\_rvr.py
 
 Verifies if a given *.rvr* file is topologically consistent, looking for loops and downstream bifurcations.
 
@@ -93,4 +93,14 @@ Converts snapshots from *.rec* into a *.h5* snapshot format.
 
 ### initialcondition\_generator\_254\_idealized.py
 
-Creates an *.rec* initial condition file by extrapolation of the outlet/drainage area relationship on a given link (usually the outlet link) for Top Layer (254) model. 
+Creates an *.rec* initial condition file by extrapolation of the outlet/drainage area relationship on a given link (usually the outlet link) for Top Layer (254) model.
+
+<!---
+### initialcondition\_generator\_254\_idealized.py
+
+TODO - describe it
+--->
+
+### plot\_timeseries\_h5\_outputs.py
+
+Creates a .csv file with the timeseries data of a for a specific link from a set of sequential .h5 state files. It has the purpose of providing a simplified way for plotting timeseries from sequential runs (as the case of realtime systems). 
