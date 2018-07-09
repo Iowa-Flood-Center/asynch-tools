@@ -1,6 +1,7 @@
 from datetime import datetime
 import numpy as np
 import h5py
+import os
 
 from initialcondition_generator_lib.SystemStatus import SystemStatus
 
@@ -301,16 +302,25 @@ class GridSet:
             print(" Not using a base snapshot file.")
             base_h5_file = None
 
-        if out_snapshot_file_path.endswith(".h5"):
-            GridSet.save_values_h5(links_location, out_snapshot_file_path, base_h5_file=base_h5_file,
-                                   base_inherit_states=base_snapshot_inherit_states)
-        elif out_snapshot_file_path.endswith(".rec"):
-            GridSet.save_values_rec(links_location, out_snapshot_file_path)
+        _, ext = os.path.splitext(out_snapshot_file_path)
+        if ext == ".h5":
+            file_written = GridSet.save_values_h5(links_location, out_snapshot_file_path, base_h5_file=base_h5_file,
+                                                  base_inherit_states=base_snapshot_inherit_states)
+        elif ext == ".rec":
+            file_written = GridSet.save_values_rec(links_location, out_snapshot_file_path)
+        else:
+            print(" Unexpected output snapshot file extension: {0}".format(ext))
+            file_written = False
 
         if base_h5_file is not None:
             base_h5_file.close()
 
-        return True
+        if file_written:
+            print(" Wrote file: {0}".format(out_snapshot_file_path))
+        else:
+            print(" Unable to write file: {0}".format(out_snapshot_file_path))
+
+        return file_written
 
     @staticmethod
     def save_values_rec(links_location, output_file_path):

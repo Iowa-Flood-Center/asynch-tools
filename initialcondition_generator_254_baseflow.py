@@ -71,8 +71,12 @@ try:
     usgs_gauges_to_ignore = JsonSettings.read_gages_list_file(run_settings['gages_ignore_csv'])
     usgs_gauges_to_consider = JsonSettings.read_gages_list_file(run_settings['gages_only_csv'])
     usgs_gauges_bounding_box = run_settings['gages_only_bounding_box']
-    base_snapshot_file_path = run_settings['base_snapshot_file_path'] \
-        if 'base_snapshot_file_path' in run_settings else None
+    if 'base_snapshot_file_path' in run_settings:
+        base_snapshot_file_path = run_settings['base_snapshot_file_path']
+        if base_snapshot_file_path.lower() == 'none':
+            base_snapshot_file_path = None
+    else:
+        base_snapshot_file_path = None
     base_snapshot_states_inherit = run_settings['base_snapshot_states_inherit'] \
         if 'base_snapshot_states_inherit' in run_settings else None
     interpolation_method = run_settings['interpolation_method']
