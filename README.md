@@ -91,15 +91,27 @@ Converts snapshot files in *.h5* format from one Hillslope-Link model to another
 
 Converts snapshots from *.rec* into a *.h5* snapshot format.
 
+### file\_materializer\_rvr.py
+
+Generates a river topology file (*.rvr*) for a single database from readings from a given database.
+
+### initialcondition\_generator\_254\_baseflow.py
+
+Creates an initial condition file by estimating baseflow dischage from observed data and interpolating both baseflow discharge and soil water column in space for Top Layer (254) model. 
+
 ### initialcondition\_generator\_254\_idealized.py
 
 Creates an *.rec* initial condition file by extrapolation of the outlet/drainage area relationship on a given link (usually the outlet link) for Top Layer (254) model.
 
-<!---
-### initialcondition\_generator\_254\_idealized.py
+### initialcondition\_selector\_10days.py
 
-TODO - describe it
---->
+Given a folder ```F``` that contains a set of initial condition files named with the pattern ```[PREFIX]_[UNIX_TIMESTAMP].h5```, in which:
+
+- ```[PREFIX]```: is a set alphanumeric characters not ending with a numerical character;
+- ```[UNIX_TIMESTAMP]```: is a integer representing a unix timestamp, in seconds.
+
+This script **deletes** all ```.h5``` files from folder ```F``` that have ```UNIX_TIMESTAMP``` values not representing the midnight of days *01*, *11* or *21* of every month.
+     
 
 ### plot\_timeseries\_h5\_outputs.py
 

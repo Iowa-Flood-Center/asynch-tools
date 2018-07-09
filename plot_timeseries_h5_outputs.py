@@ -75,8 +75,10 @@ class DebugFileContent:
 
         # iterates over the files
         first_file_found = False
-        output_list = []
-        for cur_filename in all_file_names:
+        total_files = len(all_file_names)
+        for cur_i, cur_filename in enumerate(all_file_names):
+
+            print("Reading file {0} out of {1}.".format(cur_i, total_files))
 
             # check if current file comes after first one
             if not first_file_found:

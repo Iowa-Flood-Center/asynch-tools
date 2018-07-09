@@ -9,7 +9,11 @@ import os
 if '-h' in sys.argv:
     print("Converts a snapshot file (.h5) from an hl-model format to another (example: from 254 to 195).")
     print("Available conversions:")
+    print("  191 -> 192")
+    print("  195 -> 196")
+    print("  196 -> 191")
     print("  254 -> 195")
+    print("  254 -> 196")
     print("  254 -> 256")
     print("Usage: python file_converter_hlmodels_h5.py -mode MODE -in_path INPUT_PATH -out_path OUTPUT_PATH -out_hl HL")
     print("  MODE        : Must be 'f' for 'single file' or 'd' for 'directory of files'.")
@@ -45,7 +49,7 @@ if outhl_arg is None:
 
 class InitialConditionConverter:
 
-    _OUT_ASYNCH_VERSION = "1.3.2"
+    _OUT_ASYNCH_VERSION = "1.4.2"
 
     @staticmethod
     def convert_directory(input_folder_path, output_folder_path, output_hlmodel_id):
@@ -101,8 +105,16 @@ class InitialConditionConverter:
             return False
 
         # route to proper converter
-        if (input_hlmodel == 254) and (output_hlmodel_id == 195):
+        if (input_hlmodel == 191) and (output_hlmodel_id == 192):
+            return InitialConditionConverterSpecific.convert_from_191_to_192(input_file_path, output_file_path)
+        elif (input_hlmodel == 195) and (output_hlmodel_id == 196):
+            return InitialConditionConverterSpecific.convert_from_195_to_196(input_file_path, output_file_path)
+        elif (input_hlmodel == 196) and (output_hlmodel_id == 191):
+            return InitialConditionConverterSpecific.convert_from_196_to_191(input_file_path, output_file_path)
+        elif (input_hlmodel == 254) and (output_hlmodel_id == 195):
             return InitialConditionConverterSpecific.convert_from_254_to_195(input_file_path, output_file_path)
+        elif (input_hlmodel == 254) and (output_hlmodel_id == 196):
+            return InitialConditionConverterSpecific.convert_from_254_to_196(input_file_path, output_file_path)
         elif (input_hlmodel == 254) and (output_hlmodel_id == 256):
             return InitialConditionConverterSpecific.convert_from_254_to_256(input_file_path, output_file_path)
         else:
@@ -197,6 +209,40 @@ class InitialConditionConverter:
 class InitialConditionConverterSpecific:
 
     @staticmethod
+    def convert_from_191_to_192(in_path, out_path):
+        """
+
+        :param in_path:
+        :param out_path:
+        :return:
+        """
+
+        # read inp file and basic check
+        unix_time, in_hdf_data = InitialConditionConverter.read_input_file(in_path)
+        if in_hdf_data.size == 1:
+            print("Unable to find 'snapshot' dataset in file: {0}.".format(in_path))
+            return False
+
+        # create data type
+        the_dtype = InitialConditionConverter.create_datatype(7)
+
+        # compress data
+        compress_data = []
+        for cur_hdf_row in in_hdf_data:
+            cur_tuple = (cur_hdf_row[0],  # link id
+                         cur_hdf_row[1],  # discharge
+                         cur_hdf_row[2],  # ponded water
+                         cur_hdf_row[3],  # soil water
+                         cur_hdf_row[4],  # acc. precip.
+                         cur_hdf_row[5],  # acc. runoff.
+                         cur_hdf_row[6])
+            cur_list_np = np.array(cur_tuple, dtype=the_dtype)
+            compress_data.append(cur_list_np)
+
+        # write output file
+        return InitialConditionConverter.write_output_file(out_path, 192, unix_time, the_dtype, compress_data)
+
+    @staticmethod
     def convert_from_254_to_195(in_path, out_path):
         """
 
@@ -228,6 +274,108 @@ class InitialConditionConverterSpecific:
 
         # write output file
         return InitialConditionConverter.write_output_file(out_path, 195, unix_time, the_dtype, compress_data)
+
+    @staticmethod
+    def convert_from_254_to_196(in_path, out_path):
+        """
+
+        :param in_path:
+        :param out_path:
+        :return:
+        """
+
+        # read inp file and basic check
+        unix_time, in_hdf_data = InitialConditionConverter.read_input_file(in_path)
+        if in_hdf_data.size == 1:
+            print("Unable to find 'snapshot' dataset in file: {0}.".format(in_path))
+            return False
+
+        # create data type
+        the_dtype = InitialConditionConverter.create_datatype(6)
+
+        # compress data
+        compress_data = []
+        for cur_hdf_row in in_hdf_data:
+            cur_tuple = (cur_hdf_row[0],                                     # link id
+                         cur_hdf_row[1],                                     # discharge
+                         cur_hdf_row[2],                                     # ponded water
+                         float(cur_hdf_row[3]) + float(cur_hdf_row[4]),      # soil water
+                         cur_hdf_row[5],                                     # acc. precip.
+                         cur_hdf_row[6])                                     # acc. runoff
+
+            cur_list_np = np.array(cur_tuple, dtype=the_dtype)
+            compress_data.append(cur_list_np)
+
+        # write output file
+        return InitialConditionConverter.write_output_file(out_path, 196, unix_time, the_dtype, compress_data)
+
+    @staticmethod
+    def convert_from_195_to_196(in_path, out_path):
+        """
+
+        :param in_path:
+        :param out_path:
+        :return:
+        """
+
+        # read inp file and basic check
+        unix_time, in_hdf_data = InitialConditionConverter.read_input_file(in_path)
+        if in_hdf_data.size == 1:
+            print("Unable to find 'snapshot' dataset in file: {0}.".format(in_path))
+            return False
+
+        # create data type
+        the_dtype = InitialConditionConverter.create_datatype(6)
+
+        # compress data
+        compress_data = []
+        for cur_hdf_row in in_hdf_data:
+            cur_tuple = (cur_hdf_row[0],                                     # link id
+                         cur_hdf_row[1],                                     # discharge
+                         cur_hdf_row[2],                                     # ponded water
+                         cur_hdf_row[3],                                     # soil water
+                         cur_hdf_row[4],                                     # acc. precip.
+                         0.0)
+
+            cur_list_np = np.array(cur_tuple, dtype=the_dtype)
+            compress_data.append(cur_list_np)
+
+        # write output file
+        return InitialConditionConverter.write_output_file(out_path, 196, unix_time, the_dtype, compress_data)
+
+    @staticmethod
+    def convert_from_196_to_191(in_path, out_path):
+        """
+
+        :param in_path:
+        :param out_path:
+        :return:
+        """
+
+        # read inp file and basic check
+        unix_time, in_hdf_data = InitialConditionConverter.read_input_file(in_path)
+        if in_hdf_data.size == 1:
+            print("Unable to find 'snapshot' dataset in file: {0}.".format(in_path))
+            return False
+
+        # create data type
+        the_dtype = InitialConditionConverter.create_datatype(7)
+
+        # compress data
+        compress_data = []
+        for cur_hdf_row in in_hdf_data:
+            cur_tuple = (cur_hdf_row[0],  # link id
+                         cur_hdf_row[1],  # discharge
+                         cur_hdf_row[2],  # ponded water
+                         cur_hdf_row[3],  # soil water
+                         cur_hdf_row[4],  # acc. precip.
+                         cur_hdf_row[5],  # acc. runoff.
+                         cur_hdf_row[1])
+            cur_list_np = np.array(cur_tuple, dtype=the_dtype)
+            compress_data.append(cur_list_np)
+
+        # write output file
+        return InitialConditionConverter.write_output_file(out_path, 191, unix_time, the_dtype, compress_data)
 
     @staticmethod
     def convert_from_254_to_256(in_path, out_path):
