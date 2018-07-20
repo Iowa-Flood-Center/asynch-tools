@@ -115,4 +115,6 @@ This script **deletes** all ```.h5``` files from folder ```F``` that have ```UNI
 
 ### plot\_timeseries\_h5\_outputs.py
 
-Creates a .csv file with the timeseries data of a for a specific link from a set of sequential .h5 state files. It has the purpose of providing a simplified way for plotting timeseries from sequential runs (as the case of realtime systems). 
+It has the purpose of providing a simplified way for plotting timeseries from sequential runs that accumulates or generates sets of snapshot files (as the case of realtime systems).
+
+Outputs the timeseries data of a given state for a specific link from a set of sequential .h5 snapshot files. The output format can be both via *std. out* or as writing a new *.csv* file.
