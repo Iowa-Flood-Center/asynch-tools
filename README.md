@@ -97,7 +97,95 @@ Generates a river topology file (*.rvr*) for a single database from readings fro
 
 ### initialcondition\_generator\_254\_baseflow.py
 
-Creates an initial condition file by estimating baseflow dischage from observed data and interpolating both baseflow discharge and soil water column in space for Top Layer (254) model. 
+Creates an initial condition file by estimating baseflow dischage from observed data. The same script executes two procedures:
+
+- **download** observed discharge **data** from USGS gages web server, estimating local baseflows; and
+- **interpolate** both baseflow discharge and soil water column in space for Top Layer (254) model.
+
+The generated initial condition file may "inherit" the values of specific states from a previously existing snapshot file (the so called "*base snapshot*"). This is used, for example, for some data assimilation procedures, when the water column state must be updated but all the other states must be kept unchanged from previous model runs.
+
+Because there a big number of arguments is required, the main input format for this script is a *\.json* file with a single object, which has each attribute as a parameter for the script. A scratch of the configuration file can be created using the command:
+
+    $ python initialcondition_generator_254_baseflow.py -get_json_scratch [INSTRUCTIONS_JSON]
+
+In which ```[INSTRUCTIONS_JSON]``` must be replaced by the file path of the scratch file to be generated.
+
+A typical *\.json* input file for this script would have the following content:
+
+    {
+      "base_snapshot_file_path": "(...).h5",
+      "baseflow_end_date": "[DATE_INI]",
+      "baseflow_ini_date": "[DATE_END]",
+      "gages_ignore_csv": "/(...).csv",
+      "gages_only_bounding_box": {
+        "max_lat": 44.56, 
+        "max_lng": -89.85,
+        "min_lat": 40.14, 
+        "min_lng": -97.12
+      },
+      "gages_only_csv": "/(...)/(...).csv",
+      "interpolation_method": "auto",
+      "k": 2.0425e-06,
+      "linkid_location_file": "/(...)/(...).csv",
+      "output_graph_file_path": "/(...)/(...).png",
+      "output_state_file_path": "/(...)/(...).h5",
+      "procedures": ["download_data", "interpolate"],
+      "temporary_file_path": "/(...)/temp.txt",
+      "toplayer_soil_water_column": 0.02,
+      "base_snapshot_states_inherit":[1, 2, 4, 5, 6]
+    }
+
+In which:
+
+- **base\_snapshot\_file\_path**
+  - Description: File path for the *base snapshot* if it is going to be used, expects "none" otherwise. 
+  - Example: "/a\_folder/a\_file\_1.h5"
+- **base\_snapshot\_states\_inherit**
+  - Description: List of state indexes to be inherited from the *base snapshot* file.
+  - Example: *[1, 2]* would inherit only pounded and top layer water column. 
+- **baseflow\_ini\_date**
+  - Description: String in *YYYY-MM-DD* format with beginning of data interval retrieved.
+  - Example: "2017-10-22"
+- **baseflow\_end\_date** 
+  - Description: String in *YYYY-MM-DD* format with ending of data interval retrieved.
+  - Example: "2017-10-27"
+- **gages\_ignore\_csv**
+  - Description: File path for a text file with a list of USGS gages ID to be ignored.
+  - More description: Usually gages downstream of human controled reservoirs need to be removed.
+- **gages\_only\_bounding\_box**
+  - Description: bounding box that contains all considered USGS gages ID 
+- **gages\_only\_csv**
+  - Description: File path for a text file with a list of USGS gages ID to be taken into consideration.
+  - More description: It is usually used when only small gages are desired.
+- **interpolation\_method**
+  - Description: Describes which interpolation algorithm should be used.
+  - More description: Each method depends on different libraries. 
+  - Even more: "auto" will try to get the best given the libraries available. 
+  - Options: "griddata\_linear", "distance\_weighted", "thiessen", or "auto"
+- **k**
+  - Description: Float value of *K3* variable in Top Layer model to be considered.
+  - Example: 2.0425e-06
+- **linkid\_location\_file**
+  - Description: File path for a *.csv* file that associates each link id to a geographic coordinate.
+  - Example: "/a\_folder/a\_file.csv"
+- **output\_graph\_file\_path**
+  - Description: File path for a *.png* file with a scratch of the moisture distribution in space 
+  - Example: "/a\_folder/a\_file.png"
+- **output\_state\_file\_path**
+  - Description: File path for the output file to be created 
+  - Example: "/a\_folder/a\_file\_2.h5"
+- **procedures**
+  - Description: Array of the procedures to be executed in this run. Expects "download\_data" and/or "interpolate".
+  - More description: Because each step takes a considerable amount of time, one can do each at a time.
+  - Even more: You will probably want to run both steps most of times. 
+  - Even more: "interpolate" can only be run after "download\_data". It requires a *temp* file.  
+  - Example: ["download\_data"], or ["download\_data", "interpolate"] 
+- **temporary\_file\_path**
+  - Description: File path to be used as an intermediate storage between "download\_data" and "interpolate" process.
+  - Example: "/a\_folder/a\_file.txt"
+- **toplayer\_soil\_water\_column**
+  - Description: Float number with the uniform value for toplayer water column when not inherited.
+  - Example: 0.02
 
 ### initialcondition\_generator\_254\_idealized.py
 
