@@ -77,6 +77,31 @@ In which:
 
 The available scripts in the toolbox with a brief description are listed here in alphabetical order.
 
+### accumulate\_attribute\_in\_tree.py
+
+Accumulates an attribute that is distributed on a tree. The tree must be given in an typical *.rvr* file. The attribute must be given in a simple *.csv* file in the format:
+
+    link_id, attribute
+    link_id, attribute
+    (...)
+
+The options for accumulation direction are:
+
+- **up**:
+  - Accumulates the attribute from the outlet to the leaves.
+  - *Example of use:* total contribution area to the outlet.
+- **down**:
+  - Accumulates the attribute from the leaves to the outlet.
+  - *Example of use:* total distance from a link to the outlet.
+
+The output format is another *.csv* file with the format:
+
+    link_id, accumulated_attribute
+    link_id, accumulated_attribute
+    (...)
+
+**NOTE:** because the recursive nature of the file, for large tree structures it is usually necessary to use the job system of the cluster. 
+
 ### file\_consistency\_checker\_rvr.py
 
 Verifies if a given *.rvr* file is topologically consistent, looking for loops and downstream bifurcations.
@@ -86,6 +111,16 @@ Verifies if a given *.rvr* file is topologically consistent, looking for loops a
 Converts snapshot files in *.h5* format from one Hillslope-Link model to another.
 
 *Example*: snapshot for model 254 (Top Layer, 7 states) to model 195 (Offline, 4 states).
+
+### file\_converter\_csv\_to\_rvr.py
+
+Converts 2-columns CSV file with the topological information of a drainage network in the format:
+
+    source_link_id, destination_link_id
+    source_link_id, destination_link_id
+    (...)
+
+To **.rvr** format. The source **.csv** file is not modified after the run.  
 
 ### file\_converter\_rec\_to\_h5.py
 

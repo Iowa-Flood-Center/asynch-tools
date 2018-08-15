@@ -57,5 +57,15 @@ class ArgumentsManager:
         else:
             return None
 
+    @staticmethod
+    def get_flag(sys_args, arg_id):
+        """
+
+        :param sys_args:
+        :param arg_id:
+        :return:
+        """
+        return True if arg_id in sys_args else False
+
     def __init__(self):
         return
